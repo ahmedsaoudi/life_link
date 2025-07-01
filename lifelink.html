@@ -144,6 +144,12 @@
         const includeLocationCheckbox = document.getElementById('includeLocation');
         const statusMessage = document.getElementById('statusMessage');
         messageForm.addEventListener('submit', handleFormSubmit);
+
+        function escapeTelegramMarkdown(text) {
+            if (typeof text !== 'string') return text;
+            return text.replace(/([_*[\]()~`>#+\-=|{}.!])/g, '\\$1');
+        }
+
         async function handleFormSubmit(e) {
             e.preventDefault();
             const originalMessage = messageTextarea.value.trim();
@@ -153,7 +159,8 @@
             }
             setLoadingState(true);
             showStatus('Sending...', 'info');
-            let messageToSend = `🆘 LifeLink Alert 🆘\n\n${originalMessage}`;
+            const escapedMessage = escapeTelegramMarkdown(originalMessage);
+            let messageToSend = `🆘 LifeLink Alert 🆘\n\n${escapedMessage}`;
             let locationDataForMessage = null;
             try {
                 if (includeLocationCheckbox.checked) {
@@ -161,7 +168,8 @@
                     try {
                         locationDataForMessage = await getUserLocation();
                     } catch (locationError) {
-                        messageToSend += `\n\n(User tried to send location, but it failed: ${locationError.message})`;
+                        const escapedError = escapeTelegramMarkdown(locationError.message);
+                        messageToSend += `\n\n(User tried to send location, but it failed: ${escapedError})`;
                         showStatus('Location failed. Sending message without it.', 'warning');
                     }
                 }
