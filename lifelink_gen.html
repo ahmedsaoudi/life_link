@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LifeLink Generator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .step-section {
+            display: none;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+        }
+        .step-section.active {
+            display: block;
+            opacity: 1;
+        }
+        .service-button.selected {
+            border-color: #3b82f6;
+            background-color: #2563eb;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-white flex items-start justify-center min-h-screen p-4 sm:p-6 md:p-8">
+
+    <div class="w-full max-w-2xl mx-auto bg-gray-800 rounded-2xl shadow-2xl p-6 sm:p-8 space-y-8">
+        
+        <!-- Header -->
+        <div class="text-center">
+            <h1 class="text-3xl font-bold text-blue-400">LifeLink Generator</h1>
+            <p class="text-gray-400 mt-2">Create a personalized alert app for your loved ones in a few simple steps.</p>
+        </div>
+
+        <!-- Step 1: Choose Service -->
+        <div id="step1" class="step-section active">
+            <h2 class="text-xl font-semibold mb-4 border-b border-gray-600 pb-2">Step 1: Choose Notification Service</h2>
+            <p class="text-gray-400 mb-6">Select the platform where you want to receive the alerts.</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <button id="selectTelegram" class="service-button text-left p-4 bg-gray-700 hover:bg-gray-600 rounded-lg border-2 border-gray-700 hover:border-gray-500 transition">
+                    <h3 class="text-lg font-bold">Telegram</h3>
+                    <p class="text-sm text-gray-400">Fast, reliable messages sent via a Telegram bot to a specific chat.</p>
+                </button>
+                <button id="selectSlack" class="service-button text-left p-4 bg-gray-700 hover:bg-gray-600 rounded-lg border-2 border-gray-700 hover:border-gray-500 transition">
+                    <h3 class="text-lg font-bold">Slack</h3>
+                    <p class="text-sm text-gray-400">Alerts pushed to a designated channel in your Slack workspace.</p>
+                </button>
+            </div>
+        </div>
+
+        <!-- Step 2: Enter Credentials & Generate -->
+        <div id="step2" class="step-section">
+            <h2 class="text-xl font-semibold mb-4 border-b border-gray-600 pb-2">Step 2: Enter Credentials</h2>
+            
+            <!-- Telegram Instructions & Inputs -->
+            <div id="telegramConfig" class="hidden">
+                <div class="bg-gray-900 p-4 rounded-lg mb-4 border border-gray-700">
+                    <h3 class="font-semibold text-blue-300 mb-2">How to get your Telegram credentials:</h3>
+                    <ol class="list-decimal list-inside text-sm text-gray-400 space-y-1">
+                        <li><strong>Bot Token:</strong> Open Telegram and search for <code class="bg-gray-700 p-1 rounded text-xs">@BotFather</code>. Start a chat, send <code class="bg-gray-700 p-1 rounded text-xs">/newbot</code>, and follow the instructions. BotFather will give you a token.</li>
+                        <li><strong>Chat ID:</strong> Search for <code class="bg-gray-700 p-1 rounded text-xs">@userinfobot</code>. Start a chat and it will immediately reply with your User ID. This is your Chat ID.</li>
+                    </ol>
+                </div>
+                <div class="space-y-4">
+                    <div>
+                        <label for="telegramToken" class="block text-sm font-medium text-gray-300">Telegram Bot Token</label>
+                        <input type="password" id="telegramToken" class="mt-1 block w-full bg-gray-700 border border-gray-600 rounded-md p-2 text-white focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label for="telegramChatId" class="block text-sm font-medium text-gray-300">Telegram Chat ID</label>
+                        <input type="text" id="telegramChatId" class="mt-1 block w-full bg-gray-700 border border-gray-600 rounded-md p-2 text-white focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Slack Instructions & Inputs -->
+            <div id="slackConfig" class="hidden">
+                 <div class="bg-gray-900 p-4 rounded-lg mb-4 border border-gray-700">
+                    <h3 class="font-semibold text-blue-300 mb-2">How to get your Slack Webhook URL:</h3>
+                    <ol class="list-decimal list-inside text-sm text-gray-400 space-y-1">
+                        <li>Go to <a href="https://api.slack.com/apps" target="_blank" class="text-blue-400 underline">api.slack.com/apps</a> and click "Create New App".</li>
+                        <li>Choose "From scratch", name your app, and select your workspace.</li>
+                        <li>In your app's settings, go to "Incoming Webhooks" and activate them.</li>
+                        <li>Click "Add New Webhook to Workspace", choose a channel, and click "Allow".</li>
+                        <li>Copy the generated Webhook URL. It starts with <code class="bg-gray-700 p-1 rounded text-xs">https://hooks.slack.com/services/...</code></li>
+                    </ol>
+                </div>
+                <div>
+                    <label for="slackWebhook" class="block text-sm font-medium text-gray-300">Slack Webhook URL</label>
+                    <input type="password" id="slackWebhook" class="mt-1 block w-full bg-gray-700 border border-gray-600 rounded-md p-2 text-white focus:ring-blue-500 focus:border-blue-500">
+                </div>
+            </div>
+
+            <p id="configError" class="text-red-400 text-sm mt-6 text-center h-5"></p>
+
+            <div class="mt-6 flex flex-col-reverse sm:flex-row gap-4">
+                <button id="backToStep1" class="w-full sm:w-auto bg-gray-600 hover:bg-gray-500 text-white font-bold py-3 px-6 rounded-lg transition">
+                    Back
+                </button>
+                <button id="generateButton" class="w-full sm:flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition">
+                   Generate App File
+                </button>
+            </div>
+        </div>
+
+        <!-- Step 3: Download/Copy -->
+        <div id="step3" class="step-section">
+            <h2 class="text-xl font-semibold mb-4 border-b border-gray-600 pb-2">Your App Is Ready!</h2>
+            <p class="text-gray-400 mb-4">Give the generated file a simple name like <code class="bg-gray-700 p-1 rounded text-xs">lifelink.html</code> and share its secret URL with your loved one. <strong>Test it first!</strong></p>
+            <textarea id="outputHtml" rows="10" class="w-full bg-gray-900 border border-gray-600 rounded-md p-2 text-gray-300 text-xs font-mono" readonly></textarea>
+            <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                <button id="copyButton" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition">Copy Code</button>
+                <button id="downloadButton" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg transition">Download .html File</button>
+            </div>
+            <p id="copyStatus" class="text-green-400 text-sm mt-4 text-center h-5"></p>
+             <div class="mt-4 text-center">
+                 <button id="startOver" class="w-full md:w-auto bg-gray-600 hover:bg-gray-500 text-white font-bold py-2 px-6 rounded-lg transition">
+                    Start Over
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const state = {
+            service: null, // 'TELEGRAM' or 'SLACK'
+        };
+
+        // --- DOM ELEMENT REFERENCES ---
+        const steps = {
+            1: document.getElementById('step1'),
+            2: document.getElementById('step2'),
+            3: document.getElementById('step3'),
+        };
+        const serviceButtons = {
+            telegram: document.getElementById('selectTelegram'),
+            slack: document.getElementById('selectSlack'),
+        };
+        const configSections = {
+            telegram: document.getElementById('telegramConfig'),
+            slack: document.getElementById('slackConfig'),
+        };
+        const inputs = {
+            telegramToken: document.getElementById('telegramToken'),
+            telegramChatId: document.getElementById('telegramChatId'),
+            slackWebhook: document.getElementById('slackWebhook'),
+        };
+        const actionButtons = {
+            backToStep1: document.getElementById('backToStep1'),
+            generate: document.getElementById('generateButton'),
+            copy: document.getElementById('copyButton'),
+            download: document.getElementById('downloadButton'),
+            startOver: document.getElementById('startOver'),
+        };
+        const displayElements = {
+            output: document.getElementById('outputHtml'),
+            error: document.getElementById('configError'),
+            copyStatus: document.getElementById('copyStatus'),
+        };
+        
+        // --- EVENT LISTENERS ---
+        serviceButtons.telegram.addEventListener('click', () => selectService('TELEGRAM'));
+        serviceButtons.slack.addEventListener('click', () => selectService('SLACK'));
+        
+        actionButtons.backToStep1.addEventListener('click', () => showStep(1));
+        actionButtons.generate.addEventListener('click', generateApp);
+        actionButtons.copy.addEventListener('click', copyToClipboard);
+        actionButtons.download.addEventListener('click', downloadFile);
+        actionButtons.startOver.addEventListener('click', resetApp);
+
+
+        // --- LOGIC ---
+
+        function showStep(stepNumber) {
+            Object.values(steps).forEach(s => s.classList.remove('active'));
+            if(steps[stepNumber]) {
+                steps[stepNumber].classList.add('active');
+            }
+        }
+        
+        function selectService(service) {
+            state.service = service;
+            
+            serviceButtons.telegram.classList.toggle('selected', service === 'TELEGRAM');
+            serviceButtons.slack.classList.toggle('selected', service === 'SLACK');
+            
+            configSections.telegram.style.display = service === 'TELEGRAM' ? 'block' : 'none';
+            configSections.slack.style.display = service === 'SLACK' ? 'block' : 'none';
+            
+            showStep(2);
+        }
+
+        function resetApp() {
+            state.service = null;
+            inputs.telegramToken.value = '';
+            inputs.telegramChatId.value = '';
+            inputs.slackWebhook.value = '';
+            displayElements.output.value = '';
+            displayElements.error.textContent = '';
+            displayElements.copyStatus.textContent = '';
+            serviceButtons.telegram.classList.remove('selected');
+            serviceButtons.slack.classList.remove('selected');
+            showStep(1);
+        }
+        
+        function generateApp() {
+            displayElements.error.textContent = '';
+            
+            if (!state.service) {
+                displayElements.error.textContent = 'Please select a service first.';
+                return;
+            }
+
+            let configBlock = '';
+            let senderBlock = '';
+
+            if (state.service === 'TELEGRAM') {
+                const token = inputs.telegramToken.value.trim();
+                const chatId = inputs.telegramChatId.value.trim();
+                if (!token || !chatId) {
+                    displayElements.error.textContent = 'Please fill in both Telegram fields.';
+                    return;
+                }
+                configBlock = `
+        const TELEGRAM_BOT_TOKEN = "${token}";
+        const TELEGRAM_CHAT_ID = "${chatId}";
+                `;
+                senderBlock = `
+        async function sendMessage(baseText, locationData) {
+            if (TELEGRAM_BOT_TOKEN === "YOUR_TELEGRAM_BOT_TOKEN_HERE") throw new Error("Telegram not configured.");
+            let text = baseText;
+            if (locationData) {
+                const { latitude, longitude, accuracy } = locationData;
+                const mapsLink = \`https://www.google.com/maps?q=\${latitude},\${longitude}\`;
+                const locationString = \`Lat: \\\`\${latitude.toFixed(6)}\\\`\\nLon: \\\`\${longitude.toFixed(6)}\\\`\\nAcc: \\\`\${accuracy.toFixed(0)}\\\` meters\\n\\n[Open on Google Maps](\${mapsLink})\`;
+                text += \`\\n\\n📍 **Location**\\n\${locationString}\`;
+            }
+            const url = \`https://api.telegram.org/bot\${TELEGRAM_BOT_TOKEN}/sendMessage\`;
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, text, parse_mode: 'MarkdownV2' }) 
+            });
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(\`Telegram Error: \${errorData.description}\`);
+            }
+        }
+                `;
+            } else if (state.service === 'SLACK') {
+                const webhook = inputs.slackWebhook.value.trim();
+                if (!webhook) {
+                    displayElements.error.textContent = 'Please fill in the Slack Webhook URL.';
+                    return;
+                }
+                configBlock = `
+        const SLACK_WEBHOOK_URL = "${webhook}";
+                `;
+                senderBlock = `
+        async function sendMessage(baseText, locationData) {
+            if (SLACK_WEBHOOK_URL === "YOUR_SLACK_WEBHOOK_URL_HERE") throw new Error("Slack not configured.");
+            let text = baseText;
+             if (locationData) {
+                const { latitude, longitude, accuracy } = locationData;
+                const mapsLink = \`https://www.google.com/maps?q=\${latitude},\${longitude}\`;
+                const locationString = \`Lat: \${latitude.toFixed(6)}\\nLon: \${longitude.toFixed(6)}\\nAcc: \${accuracy.toFixed(0)} meters\\n\\n<\${mapsLink}|Open on Google Maps>\`;
+                text += \`\\n\\n📍 *Location*\\n\${locationString}\`;
+            }
+            const response = await fetch(SLACK_WEBHOOK_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text })
+            });
+            if (!response.ok) throw new Error(\`Slack Error: \${response.statusText}\`);
+        }
+                `;
+            }
+
+            let finalHtml = getAppTemplate()
+                .replace('//__CONFIG_BLOCK__', configBlock)
+                .replace('//__SENDER_BLOCK__', senderBlock);
+            
+            displayElements.output.value = finalHtml;
+            showStep(3);
+        }
+
+        function copyToClipboard() {
+            const textToCopy = displayElements.output.value;
+            if (!textToCopy) return;
+
+            navigator.clipboard.writeText(textToCopy).then(() => {
+                displayElements.copyStatus.textContent = 'Copied to clipboard!';
+                setTimeout(() => { displayElements.copyStatus.textContent = ''; }, 3000);
+            }).catch(err => {
+                try {
+                    const textArea = document.createElement("textarea");
+                    textArea.value = textToCopy;
+                    document.body.appendChild(textArea);
+                    textArea.focus();
+                    textArea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textArea);
+                    displayElements.copyStatus.textContent = 'Copied to clipboard!';
+                    setTimeout(() => { displayElements.copyStatus.textContent = ''; }, 3000);
+                } catch(e) {
+                     displayElements.copyStatus.textContent = 'Failed to copy.';
+                }
+            });
+        }
+        
+        function downloadFile() {
+             const textToDownload = displayElements.output.value;
+             if (!textToDownload) return;
+
+             const blob = new Blob([textToDownload], { type: 'text/html' });
+             const url = URL.createObjectURL(blob);
+             const a = document.createElement('a');
+             a.href = url;
+             a.download = 'lifelink.html';
+             document.body.appendChild(a);
+             a.click();
+             document.body.removeChild(a);
+             URL.revokeObjectURL(url);
+        }
+
+        function getAppTemplate() {
+            return `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LifeLink</title>
+    <style>
+        :root {
+            --bg-color: #000000;
+            --text-color: #ffffff;
+            --label-color: #cccccc;
+            --border-color: #555555;
+            --placeholder-color: #777777;
+            --accent-color: #007aff;
+            --danger-color: #ff3b30;
+            --danger-active: #ff453a;
+            --success-color: #34c759;
+            --warning-color: #ff9500;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            padding: 1rem;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .container {
+            width: 100%;
+            max-width: 500px;
+            padding-top: 2rem;
+        }
+        .header h1 {
+            color: var(--danger-color);
+            font-size: 1.5rem;
+            margin: 0 0 0.25rem 0;
+            text-align: center;
+            font-weight: 600;
+        }
+        .header p {
+            color: var(--label-color);
+            margin: 0 0 2rem 0;
+            text-align: center;
+            font-size: 0.9rem;
+        }
+        form label {
+            display: block;
+            color: var(--label-color);
+            margin-bottom: 0.5rem;
+            font-size: 1rem;
+        }
+        textarea {
+            width: 100%;
+            box-sizing: border-box;
+            background-color: var(--bg-color);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            padding: 0.75rem;
+            color: var(--text-color);
+            font-size: 1rem;
+            font-family: inherit;
+            resize: vertical;
+            min-height: 120px;
+            margin-bottom: 1rem;
+        }
+        textarea:focus {
+            outline: none;
+            border-color: var(--accent-color);
+        }
+        textarea::placeholder {
+            color: var(--placeholder-color);
+        }
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+        .checkbox-group input {
+            width: 1.2em;
+            height: 1.2em;
+            margin-right: 0.75rem;
+            accent-color: var(--accent-color);
+        }
+        .checkbox-group label {
+            margin: 0;
+            color: var(--text-color);
+        }
+        button {
+            width: 100%;
+            background-color: var(--danger-color);
+            color: white;
+            font-weight: bold;
+            font-size: 1.2rem;
+            padding: 1rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+        button:active {
+            background-color: var(--danger-active);
+        }
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        #statusMessage {
+            text-align: center;
+            font-weight: 500;
+            padding-top: 1rem;
+            height: 1.25rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>LifeLink</h1>
+            <p>Send an alert immediately.</p>
+        </div>
+        <form id="messageForm">
+            <label for="message">Your Message:</label>
+            <textarea id="message" name="message" rows="5" placeholder="Describe the situation..." required></textarea>
+            <div class="checkbox-group">
+                <input id="includeLocation" name="includeLocation" type="checkbox">
+                <label for="includeLocation">Append my current location</label>
+            </div>
+            <button id="sendButton" type="submit">Send Alert</button>
+        </form>
+        <div id="statusMessage"></div>
+    </div>
+    <script>
+        //__CONFIG_BLOCK__
+        const messageForm = document.getElementById('messageForm');
+        const sendButton = document.getElementById('sendButton');
+        const messageTextarea = document.getElementById('message');
+        const includeLocationCheckbox = document.getElementById('includeLocation');
+        const statusMessage = document.getElementById('statusMessage');
+        messageForm.addEventListener('submit', handleFormSubmit);
+        async function handleFormSubmit(e) {
+            e.preventDefault();
+            const originalMessage = messageTextarea.value.trim();
+            if (!originalMessage) {
+                showStatus('Please enter a message.', 'error');
+                return;
+            }
+            setLoadingState(true);
+            showStatus('Sending...', 'info');
+            let messageToSend = \`🆘 LifeLink Alert 🆘\\n\\n\${originalMessage}\`;
+            let locationDataForMessage = null;
+            try {
+                if (includeLocationCheckbox.checked) {
+                    showStatus('Getting location...', 'info');
+                    try {
+                        locationDataForMessage = await getUserLocation();
+                    } catch (locationError) {
+                        messageToSend += \`\\n\\n(User tried to send location, but it failed: \${locationError.message})\`;
+                        showStatus('Location failed. Sending message without it.', 'warning');
+                    }
+                }
+                await sendMessage(messageToSend, locationDataForMessage);
+                showStatus('Alert sent successfully!', 'success');
+                messageTextarea.value = '';
+            } catch (error) {
+                console.error('Failed to send message:', error);
+                showStatus(\`Error: Could not send alert.\`, 'error');
+            } finally {
+                setLoadingState(false);
+            }
+        }
+        function getUserLocation() {
+            return new Promise((resolve, reject) => {
+                if (!('geolocation' in navigator)) {
+                    return reject(new Error('Geolocation not supported.'));
+                }
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        const { latitude, longitude, accuracy } = position.coords;
+                        resolve({ latitude, longitude, accuracy });
+                    },
+                    (error) => {
+                        let msg;
+                        switch (error.code) {
+                            case error.PERMISSION_DENIED: msg = 'Permission denied.'; break;
+                            case error.POSITION_UNAVAILABLE: msg = 'Position unavailable.'; break;
+                            case error.TIMEOUT: msg = 'Request timed out.'; break;
+                            default: msg = 'Unknown error.'; break;
+                        }
+                        reject(new Error(msg));
+                    },
+                    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+                );
+            });
+        }
+        //__SENDER_BLOCK__
+        function setLoadingState(isLoading) {
+            sendButton.disabled = isLoading;
+            sendButton.textContent = isLoading ? 'Sending...' : 'Send Alert';
+        }
+        function showStatus(message, type) {
+            statusMessage.textContent = message;
+            let color;
+            switch (type) {
+                case 'success': color = 'var(--success-color)'; break;
+                case 'warning': color = 'var(--warning-color)'; break;
+                case 'error':   color = 'var(--danger-color)'; break;
+                case 'info':
+                default:        color = 'var(--accent-color)'; break;
+            }
+            statusMessage.style.color = color;
+        }
+    <\/script>
+</body>
+</html>`;
+        }
+    </script>
+</body>
+</html>
