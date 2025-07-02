@@ -101,7 +101,7 @@ The project is structured to make adding new notification channels easy.
 
 #### File Structure
 
-
+```
 ├── lifelink_gen.html # The generator UI (HTML only)
 ├── README.md # This file.
 ├── assets/ # Assets for the generator app
@@ -118,7 +118,7 @@ The project is structured to make adding new notification channels easy.
 ├── pushover.js
 ├── slack.js
 └── telegram.js 
-
+```
 
 #### Contributing: Adding a New Channel
 
