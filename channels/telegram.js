@@ -22,11 +22,7 @@ async function sendMessage(baseText, locationData) {
         const escapedAccuracy = escapeTelegramMarkdown(accuracy.toFixed(0));
 
         // Format the location data using code blocks for a clean look.
-        const locationString = `Lat: `${escapedLatitude}`
-Lon: `${escapedLongitude}`
-Acc: `${escapedAccuracy}` meters
-
-[Open on Google Maps](${mapsLink})`;
+        const locationString = 'Lat: `' + escapedLatitude + '`\nLon: `' + escapedLongitude + '`\nAcc: `' + escapedAccuracy + '` meters\n\n[Open on Google Maps](' + mapsLink + ')';
         
         text += `\n\n📍 **Location**\n${locationString}`;
     }
