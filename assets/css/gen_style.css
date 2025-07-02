@@ -1,0 +1,36 @@
+/* Custom styles for the LifeLink Generator */
+
+body { 
+    font-family: 'Inter', sans-serif; 
+    -webkit-tap-highlight-color: transparent; 
+}
+
+/* Hides sections by default and prepares them for a fade-in transition */
+.step-section { 
+    display: none; 
+    opacity: 0; 
+    transition: opacity 0.5s ease-in-out; 
+}
+
+/* Makes the current step visible and fades it in */
+.step-section.active { 
+    display: block; 
+    opacity: 1; 
+}
+
+/* Styles the selected service button to give visual feedback */
+.service-button.selected { 
+    border-color: #3b82f6; 
+    background-color: #2563eb; 
+}
+
+/* Styles disabled buttons to be visually distinct and non-interactive */
+.service-button:disabled { 
+    opacity: 0.5; 
+    cursor: not-allowed; 
+    background-color: #4b5563; 
+    border-color: #4b5563; 
+}
+.service-button:disabled:hover { 
+    background-color: #4b5563; 
+}

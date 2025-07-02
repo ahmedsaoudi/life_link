@@ -1,0 +1,340 @@
+<!-- 
+This file is the base template for the final, user-facing LifeLink application.
+It contains all the HTML structure and CSS styling. The generator injects JavaScript
+into the <script> tag at the bottom.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LifeLink</title>
+    <style>
+        /* CSS variables are used for easy theming and consistency. */
+        :root {
+            --bg-color: #000000;
+            --text-color: #ffffff;
+            --label-color: #cccccc;
+            --border-color: #555555;
+            --placeholder-color: #777777;
+            --accent-color: #007aff; /* For info messages */
+            --danger-color: #ff3b30; /* For the main button and error messages */
+            --danger-active: #ff453a;
+            --success-color: #34c759; /* For success messages */
+            --warning-color: #ff9500; /* For warning messages */
+        }
+        body {
+            /* Uses system fonts for a native feel on any device. */
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            padding: 1rem;
+            box-sizing: border-box;
+            /* Prevents the blue flash on tap on mobile devices. */
+            -webkit-tap-highlight-color: transparent;
+        }
+        .container {
+            width: 100%;
+            max-width: 500px;
+            padding-top: 2rem;
+        }
+        .header h1 {
+            color: var(--danger-color);
+            font-size: 1.5rem;
+            margin: 0 0 0.25rem 0;
+            text-align: center;
+            font-weight: 600;
+        }
+        .header p {
+            color: var(--label-color);
+            margin: 0 0 2rem 0;
+            text-align: center;
+            font-size: 0.9rem;
+        }
+        form label {
+            display: block;
+            color: var(--label-color);
+            margin-bottom: 0.5rem;
+            font-size: 1rem;
+        }
+        textarea {
+            width: 100%;
+            box-sizing: border-box;
+            background-color: var(--bg-color);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            padding: 0.75rem;
+            color: var(--text-color);
+            font-size: 1rem;
+            font-family: inherit;
+            resize: vertical;
+            min-height: 120px;
+            margin-bottom: 1rem;
+        }
+        textarea:focus {
+            outline: none;
+            border-color: var(--accent-color);
+        }
+        textarea::placeholder {
+            color: var(--placeholder-color);
+        }
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+        .checkbox-group input {
+            width: 1.2em;
+            height: 1.2em;
+            margin-right: 0.75rem;
+            accent-color: var(--accent-color);
+        }
+        .checkbox-group label {
+            margin: 0;
+            color: var(--text-color);
+        }
+        button {
+            width: 100%;
+            background-color: var(--danger-color);
+            color: white;
+            font-weight: bold;
+            font-size: 1.2rem;
+            padding: 1rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+        button:active {
+            background-color: var(--danger-active);
+        }
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        #statusMessage {
+            text-align: center;
+            font-weight: 500;
+            padding-top: 1rem;
+            height: 1.25rem; /* Prevents layout shift when message appears */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>LifeLink</h1>
+            <p>Send an alert immediately.</p>
+        </div>
+        <form id="messageForm">
+            <label for="message">Your Message:</label>
+            <textarea id="message" name="message" rows="5" placeholder="Describe the situation..." required></textarea>
+            <div class="checkbox-group">
+                <input id="includeLocation" name="includeLocation" type="checkbox">
+                <label for="includeLocation">Append my current location</label>
+            </div>
+            <button id="sendButton" type="submit">Send Alert</button>
+        </form>
+        <div id="statusMessage"></div>
+    </div>
+    <script>
+        // These placeholders are replaced by the generator script with the actual JS code.
+        
+        
+        
+        const TELEGRAM_BOT_TOKEN = "7001004736:AAFB1EtEFMYG64ORb7UmnzifSDuYpWn7XbU";
+const TELEGRAM_CHAT_ID = "8020011094";
+        // This file contains all the shared JavaScript logic for the final LifeLink app,
+// such as form handling, UI updates, and geolocation. It is service-agnostic.
+
+// --- DOM ELEMENT REFERENCES ---
+const messageForm = document.getElementById('messageForm');
+const sendButton = document.getElementById('sendButton');
+const messageTextarea = document.getElementById('message');
+const includeLocationCheckbox = document.getElementById('includeLocation');
+const statusMessage = document.getElementById('statusMessage');
+
+// --- EVENT LISTENERS ---
+messageForm.addEventListener('submit', handleFormSubmit);
+
+/**
+ * Escapes characters that have special meaning in Telegram's MarkdownV2 format.
+ * This prevents user input from breaking the message formatting.
+ * @param {string} text The text to escape.
+ * @returns {string} The escaped text.
+ */
+function escapeTelegramMarkdown(text) {
+    if (typeof text !== 'string') return text;
+    // This regex matches any character that needs to be escaped in MarkdownV2.
+    return text.replace(/([_*[\]()~`>#+\-={}.!])/g, '\\$1');
+}
+
+/**
+ * Main handler for the form submission.
+ * @param {Event} e The form submission event.
+ */
+async function handleFormSubmit(e) {
+    e.preventDefault(); // Prevent the default form submission which reloads the page.
+    const originalMessage = messageTextarea.value.trim();
+
+    if (!originalMessage) {
+        showStatus('Please enter a message.', 'error');
+        return;
+    }
+
+    setLoadingState(true);
+    showStatus('Sending...', 'info');
+
+    // The base message format. We escape the user's message to ensure it's displayed correctly.
+    const escapedMessage = escapeTelegramMarkdown(originalMessage);
+    let messageToSend = `🆘 LifeLink Alert 🆘\n\n${escapedMessage}`;
+    
+    let locationDataForMessage = null;
+
+    try {
+        // If the location checkbox is checked, try to get the user's location.
+        if (includeLocationCheckbox.checked) {
+            showStatus('Getting location...', 'info');
+            try {
+                locationDataForMessage = await getUserLocation();
+            } catch (locationError) {
+                // If getting location fails, append an error message to the main alert.
+                const escapedError = escapeTelegramMarkdown(locationError.message);
+                messageToSend += `\n\n(User tried to send location, but it failed: ${escapedError})`;
+                showStatus('Location failed. Sending message without it.', 'warning');
+            }
+        }
+        
+        // Call the globally available sendMessage function (defined in a channel-specific file).
+        await sendMessage(messageToSend, locationDataForMessage);
+        
+        showStatus('Alert sent successfully!', 'success');
+        messageTextarea.value = ''; // Clear the textarea on success.
+
+    } catch (error) {
+        console.error('Failed to send message:', error);
+        showStatus(`Error: Could not send alert.`, 'error');
+    } finally {
+        // Always reset the button state, whether the send succeeded or failed.
+        setLoadingState(false);
+    }
+}
+
+/**
+ * Uses the browser's Geolocation API to get the user's current position.
+ * @returns {Promise<object>} A promise that resolves with an object containing latitude, longitude, and accuracy.
+ */
+function getUserLocation() {
+    return new Promise((resolve, reject) => {
+        if (!('geolocation' in navigator)) {
+            return reject(new Error('Geolocation not supported.'));
+        }
+
+        // Request the current position with high accuracy.
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                const { latitude, longitude, accuracy } = position.coords;
+                resolve({ latitude, longitude, accuracy });
+            },
+            (error) => {
+                // Translate the error code into a user-friendly message.
+                let msg;
+                switch (error.code) {
+                    case error.PERMISSION_DENIED: msg = 'Permission denied.'; break;
+                    case error.POSITION_UNAVAILABLE: msg = 'Position unavailable.'; break;
+                    case error.TIMEOUT: msg = 'Request timed out.'; break;
+                    default: msg = 'Unknown error.'; break;
+                }
+                reject(new Error(msg));
+            },
+            // Options for the location request.
+            { 
+                enableHighAccuracy: true, // Request the most accurate position possible.
+                timeout: 10000,           // 10 seconds before timing out.
+                maximumAge: 0             // Don't use a cached position.
+            }
+        );
+    });
+}
+
+/**
+ * Toggles the UI into a loading state (e.g., disables the send button).
+ * @param {boolean} isLoading - Whether the UI should be in a loading state.
+ */
+function setLoadingState(isLoading) {
+    sendButton.disabled = isLoading;
+    sendButton.textContent = isLoading ? 'Sending...' : 'Send Alert';
+}
+
+/**
+ * Displays a status message to the user and styles it based on the message type.
+ * @param {string} message - The message to display.
+ * @param {'info' | 'success' | 'warning' | 'error'} type - The type of message.
+ */
+function showStatus(message, type) {
+    statusMessage.textContent = message;
+    let color;
+    switch (type) {
+        case 'success': color = 'var(--success-color)'; break;
+        case 'warning': color = 'var(--warning-color)'; break;
+        case 'error':   color = 'var(--danger-color)'; break;
+        case 'info':
+        default:        color = 'var(--accent-color)'; break;
+    }
+    statusMessage.style.color = color;
+}
+        // This file contains the logic for sending a message via the Telegram Bot API.
+
+/**
+ * Sends the final formatted message to the configured Telegram chat.
+ * @param {string} baseText - The core message text, already formatted.
+ * @param {object|null} locationData - An object with lat, lon, and accuracy, or null.
+ */
+async function sendMessage(baseText, locationData) {
+    // Check if the credentials have been replaced by the generator.
+    if (TELEGRAM_BOT_TOKEN === "YOUR_TELEGRAM_BOT_TOKEN_HERE") throw new Error("Telegram not configured.");
+    
+    let text = baseText;
+
+    // If location data is available, format it and append it to the message.
+    if (locationData) {
+        const { latitude, longitude, accuracy } = locationData;
+        const mapsLink = `https://www.google.com/maps?q=${latitude},${longitude}`;
+        
+        // Escape the location values to be safely included in MarkdownV2.
+        const escapedLatitude = escapeTelegramMarkdown(latitude.toFixed(6));
+        const escapedLongitude = escapeTelegramMarkdown(longitude.toFixed(6));
+        const escapedAccuracy = escapeTelegramMarkdown(accuracy.toFixed(0));
+
+        // Format the location data using code blocks for a clean look.
+        const locationString = 'Lat: `' + escapedLatitude + '`\nLon: `' + escapedLongitude + '`\nAcc: `' + escapedAccuracy + '` meters\n\n[Open on Google Maps](' + mapsLink + ')';
+        
+        text += `\n\n📍 **Location**\n${locationString}`;
+    }
+    
+    const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
+    
+    // Send the request to the Telegram API.
+    const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+            chat_id: TELEGRAM_CHAT_ID, 
+            text, 
+            parse_mode: 'MarkdownV2' // Specify that we're using MarkdownV2 formatting.
+        })
+    });
+    
+    // If the response is not OK, parse the error message from Telegram and throw an error.
+    if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(`Telegram Error: ${errorData.description}`);
+    }
+}
+    
+    </script>
+</body>
+</html>
