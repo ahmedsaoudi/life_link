@@ -78,7 +78,7 @@ Choose **one** of the recommended, fully supported services.
 
 ---
 
-## Guide for the "User" (Your Loved One)
+## Guide for the "User" 
 
 Your role is simple: save the link and know how to use it.
 
