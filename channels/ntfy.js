@@ -9,6 +9,11 @@
 async function sendMessage(baseText, locationData) {
     if (NTFY_TOPIC_URL === "YOUR_NTFY_TOPIC_URL_HERE") throw new Error("ntfy.sh not configured.");
 
+    let topicUrl = NTFY_TOPIC_URL;
+    if (!topicUrl.startsWith('http://') && !topicUrl.startsWith('https://')) {
+        topicUrl = 'https://' + topicUrl;
+    }
+
     let message = baseText;
     let actions = [];
 
@@ -26,13 +31,13 @@ async function sendMessage(baseText, locationData) {
     }
 
     const headers = {
-        'Title': '🆘 LifeLink Alert!',
+        'Title': 'LifeLink Alert!',
         'Priority': 'urgent',
         'Tags': 'rotating_light,sos',
         ...(actions.length > 0 && { 'Actions': JSON.stringify(actions) })
     };
 
-    const response = await fetch(NTFY_TOPIC_URL, {
+    const response = await fetch(topicUrl, {
         method: 'POST',
         body: message,
         headers: headers
