@@ -1,6 +1,6 @@
 # LifeLink
 
-*A simple, private, no-install emergency alert web app.*
+*A simple, private, minimal-install emergency alert web app.*
 
 LifeLink is a self-contained, single-file web application designed to be the simplest, fastest way for a loved one to send an emergency alert. It solves the problem of needing a quick alert system without forcing the user to install an app, create an account, or learn a complex interface.
 
@@ -38,7 +38,7 @@ The core design of LifeLink embeds your notification credentials directly into t
 
 ---
 
-## Guide for the "Deployer" (You)
+## Guide for the "Deployer" 
 
 As the Deployer, your role is to set up the notification service and generate the final `lifelink.html` file.
 
